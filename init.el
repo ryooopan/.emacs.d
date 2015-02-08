@@ -2,7 +2,12 @@
 (set-face-foreground 'font-lock-comment-face "black")
 
 ;; Load Files
-(add-to-list 'load-path "~/.emacs.d/lisp")
+;; (add-to-list 'load-path "~/.emacs.d/lisp")
+(setq load-path (cons "~/.emacs.d/elisp" load-path))
+
+(package-initialize)
+(add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
+(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
 
 ;; Line Number
 (column-number-mode t)
@@ -27,6 +32,8 @@
 (show-paren-mode t)
 (transient-mark-mode t)
 
+
+;; Auto Complete
 
 ;; Other Settings
 (setq inhibit-startup-message t)
