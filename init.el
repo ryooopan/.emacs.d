@@ -10,34 +10,116 @@
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
 
 
-;;(require 'anything-startup)
+;; (require 'anything-startup)
 ;;(require 'popwin)
 ;;(setq display-buffer-function 'popwin:display-buffer)
 
-;;(require 'auto-complete)
-;;(require 'auto-complete-config)
-;;(global-auto-complete-mode t)
+
+;; General Settings
+(setq inhibit-startup-message t)
+(setq indent-level 2)
+(setq tab-width 2)
+(show-paren-mode 1)
+(defalias 'yes-or-no-p 'y-or-n-p)
+
+
+(global-set-key (kbd "C-h") 'backward-delete-char)
+;; (global-set-key (kbd "C-]") 'forward-paragraph)
+;;(define-key global-map (kdb "M-n") 'forward-paragraph)
+;;(define-key global-map (kdb "M-p") 'backward-paragraph)
+
  
 ;;(when (eq system-type 'darwin)
 ;;  (setq ns-command-modifier (quote meta)))
 
+;; Smooth Scroll
+(require 'smooth-scroll)
+(smooth-scroll-mode t)
+
 
 
 (global-set-key (kbd "C-x C-l") 'linum-mode)
+
+;; Recent File
+(setq recentf-max-saved-items 3000)
+(setq recentf-exclude '("/TAGS$" "/var/tmp/"))
+(require 'recentf-ext)
+
+
+;; Hlinum 
+(require 'hlinum)
+(hlinum-activate)
+
+
 (require 'ace-jump-mode)
 (define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
 
-(when (and (executable-find "cmigemo")
-	   (require 'migemo nil t))
-  (setq migemo-options '("-q" "--emacs"))
-  (setq migemo-user-dictionary nil)
-  (setq migemo-regex-dictionary nil)
-  (setq migemo-coding-system 'utf-8-unix)
-  (load-library "migemo")
-  (migemo-init)
-  )
+
+;; Migemo
+(require 'migemo)
+(setq migemo-command "cmigemo")
+(setq migemo-options '("-q" "--emacs"))
 (setq migemo-command "/usr/local/bin/cmigemo")
 (setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict")
+
+
+;; Point Undo
+(require 'point-undo)
+(define-key global-map (kbd "<f-7>") 'point-undo)
+(define-key global-map (kbd "S-<f-7>") 'point-redo)
+
+
+
+;; Undo
+(require 'undo-tree)
+(require 'undohist)
+(global-undo-tree-mode t)
+(global-set-key (kbd "M-/") 'undo-tree-redo)
+(undohist-initialize)
+
+
+;; Redo+
+(require 'redo+)
+(global-set-key (kbd "C-M-/") 'redo)
+(setq undo-no-redo t) 
+
+
+;; Smart Parents
+;; (require 'smartparens-config)
+;; (smartparens-global-mode t)
+
+;; Line Number
+(column-number-mode t)
+(line-number-mode t)
+
+;; (load-theme 'zenburn t)
+
+;; Encoding
+(set-language-environment "Japanese")
+(set-default-coding-systems 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(set-buffer-file-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
+
+
+;; Backup Files
+(setq make-backup-files nil)
+(setq auto-save-default nil)
+(setq backup-inhibited t)
+
+
+;; Highlight
+(show-paren-mode t)
+(transient-mark-mode t)
+
+
+;; Yasnippet
+;; (require 'yasnippet-config)
+;; (yas-global-mode 1)
+
+
+
 
 ;; Multiple Cursor
 (require 'multiple-cursors)
@@ -63,39 +145,21 @@
    ("O"        . 'mc/reverse-regions)))
 
 
-;; Line Number
-(column-number-mode t)
-(line-number-mode t)
-
-;; Encoding
-(set-language-environment "Japanese")
-(set-default-coding-systems 'utf-8)
-(set-terminal-coding-system 'utf-8)
-(set-keyboard-coding-system 'utf-8)
-(set-buffer-file-coding-system 'utf-8)
-(prefer-coding-system 'utf-8)
-
-
-;; Backup Files
-(setq make-backup-files nil)
-(setq auto-save-default nil)
-(setq backup-inhibited t)
-
-
-;; Highlighting
-(show-paren-mode t)
-(transient-mark-mode t)
+;; Anzu Search Count
+(global-anzu-mode +1)
 
 
 ;; Auto Complete
+(require 'auto-complete)
+(require 'auto-complete-config)
+(global-auto-complete-mode t)
 
-;; Other Settings
-(setq inhibit-startup-message t)
-(global-set-key "\C-h" 'backward-delete-char)
 
-(setq indent-level 2)
-(setq tab-width 2)
+;; Gist
+(require 'gist)
 
+;; Shell Hisotyr
+(require 'shell-history)
 
 ;; Python Mode
 (add-hook 'python-mode-hook
@@ -169,5 +233,6 @@
   (setq web-mode-css-indent-offset 2)
   (setq web-mode-code-indent-offset 2))
 (add-hook 'web-mode-hook 'web-mode-hook)
+
 
 

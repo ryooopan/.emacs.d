@@ -1,1 +1,28 @@
-(nil)
+((("undo-tree-redo" .
+   [0 0 0 0 2 0 0 0 0 0 0 0 0 0])
+  ("forward-paragraph" .
+   [0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0])
+  ("Smooth" .
+   [0 0 0 0 1 1])
+  ("undohist" .
+   [0 0 0 0 0 0 1 0])
+  ("auto-complete" .
+   [1 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("require" .
+   [4 0 1 4 0 0 0])
+  ("global-unset-key" .
+   [0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0])
+  ("global-set-key" .
+   [0 0 0 0 0 0 0 0 0 2 0 0 0 1])
+  ("kbd" .
+   [2 0 0])
+  ("undo-tree" .
+   [0 0 0 0 1 0 0 0 0])
+  ("zenburn" .
+   [1 0 0 0 0 0 0])
+  ("show-paren-mode" .
+   [0 0 0 0 0 0 0 1 0 0 0 0 0 1 0])
+  ("define-key" .
+   [0 0 0 0 0 0 1 0 0 0])
+  ("global-map" .
+   [1 0 0 0 0 0 0 0 0 0])))
