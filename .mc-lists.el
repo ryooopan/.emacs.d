@@ -8,4 +8,6 @@
 
 (setq mc/cmds-to-run-once
       '(
+	backward-delete-char
+	electric-newline-and-maybe-indent
 	))

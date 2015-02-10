@@ -16,6 +16,35 @@
 
 
 (global-set-key (kbd "C-h") 'backward-delete-char)
+(global-set-key (kbd "S-M-h") (lambda () (interactive) (move-to-window-line 0)))
+(global-set-key (kbd "S-M-m") (lambda () (interactive) (move-to-window-line nil)))
+(global-set-key (kbd "S-M-l") (lambda () (interactive) (move-to-window-line -1)))
+(global-set-key (kbd "M-[") 'backward-paragraph)
+(global-set-key (kbd "M-]") 'forward-paragraph)
+(define-key isearch-mode-map (kbd "C-h") 'isearch-delete-char)
+
+
+
+;;(global-set-key (kbd "C-[" 'nil)
+;;(setq mac-option-modifier 'super)
+;;(setq mac-command-modifier 'meta)
+
+
+(when (eq system-type 'darwin)
+  (setq ns-command-modifier (quote meta)))
+
+
+;; Copy and Paste with OS X
+(defun copy-from-osx ()
+	(shell-command-to-string "pbpaste"))
+(defun paste-to-osx (text &optional push)
+	(let ((process-connection-type nil))
+		(let ((proc (start-process "pbcopy" "*Messages*" "pbcopy")))
+			(process-send-string proc text)
+			(process-send-eof proc))))
+(setq interprogram-cut-function 'paste-to-osx)
+(setq interprogram-paste-function 'copy-from-osx)
+
 ;; (global-set-key (kbd "C-]") 'forward-paragraph)
 ;;(define-key global-map (kdb "M-n") 'forward-paragraph)
 ;;(define-key global-map (kdb "M-p") 'backward-paragraph)
@@ -26,23 +55,129 @@
 
 
 
+;; Multiple Cursor
+(require 'multiple-cursors)
+(global-set-key (kbd "C-M-c") 'mc/edit-lines)
+(global-set-key (kbd "C-M-r") 'mc/mark-all-in-region)
+
+;; Smartrep
+(require 'smartrep)
+(declare-function smartrep-define-key "smartrep")
+(global-unset-key (kbd "C-t"))
+(smartrep-define-key global-map (kbd "C-t")
+	'(("C-t" . 'mc/mark-next-like-lthis)
+		("C-n" . 'mc/mark-next-like-lthis)
+		("C-p" . 'mc/mark-previous-like-lthis)
+		("*" . 'mc/mark-all-like-lthis)
+		("d" . 'mc/mark-all-like-lthis-dwim)
+		("i" . 'mc/insert-numbers)))
+
+
+;; Kill Word at Point
+(defun kill-word-at-point ()
+	(interactive)
+	(let ((char (char-to-string (char-after (point)))))
+		(cond
+		 ((string= " " char) (delete-horizontal-space))
+		 ((string-match "[\t\n -@\[-`{-~]" char) (kill-word 1))
+		 (t (forward-char) (backward-word) (kill-word 1)))))
+(global-set-key "\M-d" 'kill-word-at-point)
+
+
+;; Kill line and Decrease Indent
+(defadvice kill-line (before kill-line-and-fixup activate)
+	(when (and (not (bolp)) (eolp))
+		(forward-char)
+		(fixup-whitespace)
+		(backward-char)))
+
+
+
 ;; Helm
-(require 'anything-startup)
-(require 'popwin)
-(popwin-mode 1)
+(require 'helm)
+(require 'helm-config)
+(define-key global-map (kbd "M-x")     'helm-M-x)
+(define-key global-map (kbd "C-x C-f") 'helm-find-files)
+(define-key global-map (kbd "C-x C-r") 'helm-recentf)
+(define-key global-map (kbd "M-y")     'helm-show-kill-ring)
+(define-key global-map (kbd "C-c i")   'helm-imenu)
+(define-key global-map (kbd "C-x b")   'helm-buffers-list)
+
+(define-key helm-map (kbd "C-h") 'backward-delete-char)
+(define-key helm-map (kbd "TAB") 'helm-execute-persistent-action)
+
+;; (define-key helm-find-files-map (kbd "C-h") 'delete-backward-char)
+;; (define-key helm-find-files-map (kbd "TAB") 'helm-execute-persistent-action)
+;; (define-key helm-read-file-map (kbd "TAB") 'helm-execute-persistent-action)
+
+(define-key helm-command-map (kbd "d") 'helm-descbinds)
+(define-key helm-command-map (kbd "g") 'helm-ag)
+(define-key helm-command-map (kbd "o") 'helm-occur)
+(define-key helm-command-map (kbd "y") 'yas/insert-snippet)
+
+(setq helm-delete-minibuffer-contents-from-point t)
+(setq helm-buffer-max-length 35)
+(setq helm-mini-defaul-sources
+      '(helm-source-buffers-list
+	helm-source-ls-git
+	helm-source-recentf
+	helm-source-buffer-not-found))
+(defadvice helm-delete-minibuffer-contents (before helm-emulate-kill-line activate)
+  "Emulate `kill-line' in helm minibuffer"
+  (kill-new (buffer-substring (point) (field-end))))
+(defadvice helm-ff-kill-or-find-buffer-fname (around execute-only-if-exist activate)
+  "Execute command only if CANDIDATE exists"
+  (when (file-exists-p candidate)
+    ad-do-it))
+
+(require 'helm-swoop)
+(global-set-key (kbd "M-i") 'helm-swoop)
+(global-set-key (kbd "M-I") 'helm-swoop-back-to-last-point)
+(global-set-key (kbd "C-c M-i") 'helm-multi-swoop)
+(global-set-key (kbd "C-x M-i") 'helm-multi-swoop-all)
+(define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
+(define-key helm-swoop-map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
+
+
+(require 'helm-git-grep)
+(global-set-key (kbd "C-c g") 'helm-git-grep)
+(define-key isearch-mode-map (kbd "C-c g") 'helm-git-grep-from-isearch)
+(eval-after-load 'helm
+  '(define-key helm-map (kbd "C-c g") 'helm-git-grep-from-helm))
+
+(helm-mode 1)
+
+
+;; Helm GitHub 
+(require 'helm-open-github)
+(global-set-key (kbd "C-c o f") 'helm-open-github-from-file)
+(global-set-key (kbd "C-c o c") 'helm-open-github-from-commit)
+(global-set-key (kbd "C-c o i") 'helm-open-github-from-issues)
+
+
+ ;; GHQ
+(require 'helm-ghq)
+(global-set-key (kbd "C-c C-q") 'helm-ghq)
+
+
+(require 'helm-github-stars)
+(setq helm-github-stars-username "ryooopan")
+
+;; (require 'anything-startup)
+;;(require 'popwin)
+;;(popwin-mode 1)
 ;;(setq display-buffer-function 'popwin:display-buffer)
 
-;; (require 'helm-config)
-;; (global-set-key (kbd "M-x") 'helm-M-X)
-;; (helm-mode 1)
+
+;; Git Gutter Fringe
+(global-git-gutter-mode +1)
+(custom-set-variables
+ '(git-gutter:modified-sign "+") 
+ '(git-gutter:added-sign "+")
+ '(git-gutter:deleted-sign "-"))
+(set-face-foreground 'git-gutter:modified "yellow")
 
 
-;; Powerline
-(require 'powerline)
-(setq powerline-arrow-shape 'arrow)
-(custom-set-faces
- '(mode-line ((t (:foreground "#030303" :background "#bdbdbd" :box nil))))
- '(mode-line-inactive ((t (:foreground "#f9f9f9" :background "#666666" :box nil)))))
 
 ;; Jaunte Hit a Hint
 (require 'jaunte)
@@ -50,6 +185,12 @@
 
 ;; Magit
 (require 'magit)
+
+
+;; Exec Path from Shell
+(require 'exec-path-from-shell)
+(let ((envs '("PATH" "DOCKER_CERT_PATH")))
+	(exec-path-from-shell-copy-envs envs))
 
 
 (global-set-key (kbd "C-x C-l") 'linum-mode)
@@ -76,6 +217,12 @@
 (setq migemo-command "/usr/local/bin/cmigemo")
 (setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict")
 
+
+;; Expand Region
+(require 'expand-region)
+(global-set-key (kbd "C-@") 'er/expand-region)
+(global-set-key (kbd "C-M-@") 'er/contract-region)
+;;(transient-mark-mode t)
 
 ;; Point Undo
 (require 'point-undo)
@@ -131,36 +278,6 @@
 ;; Highlight
 (show-paren-mode t)
 (transient-mark-mode t)
-
-
-;; Multiple Cursor
-(require 'multiple-cursors)
-(global-set-key (kbd "C-M-c") 'mc/edit-lines)
-(global-set-key (kbd "C-M-r") 'mc/mark-all-in-region)
-
-;; Smartrep
-(require 'smartrep)
-(declare-function smartrep-define-key "smartrep")
-(global-unset-key "\C-t")
-
-;(smartrep-define-key global-map "C-q"
-;  '(("[" . 'backward-paragraph)
-;    ("]" . 'forward-paragraph)))
-  
-(smartrep-define-key global-map "C-t"
-  '(("C-t" . 'mc/mark-next-like-this)
-    ("n" . 'mc/mark-next-like-this)
-    ("p" . 'mc/mark-previous-like-this)
-    ("m" . 'mc/mark-more-like-this-extended)
-    ("u" . 'mc/unmark-next-like-this)
-    ("U" . 'mc/unmark-previous-like-this)
-    ("s" . 'mc/skip-to-next-like-this)
-    ("S" . 'mc/skip-to-previous-like-this)
-    ("*" . 'mc/mark-all-like-this)
-    ("d" . 'mc/mark-all-like-this-dwim)
-    ("i" . 'mc/insert-numbers)
-    ("O" . 'Mc/sort-regions)
-    ("O" . 'mc/reverse-regions)))
 
 
 ;; Anzu Search Count
