@@ -24,35 +24,24 @@
 (define-key isearch-mode-map (kbd "C-h") 'isearch-delete-char)
 
 
-
-;;(global-set-key (kbd "C-[" 'nil)
-;;(setq mac-option-modifier 'super)
-;;(setq mac-command-modifier 'meta)
-
-
 (when (eq system-type 'darwin)
   (setq ns-command-modifier (quote meta)))
 
 
 ;; Copy and Paste with OS X
 (defun copy-from-osx ()
-	(shell-command-to-string "pbpaste"))
+  (shell-command-to-string "pbpaste"))
 (defun paste-to-osx (text &optional push)
-	(let ((process-connection-type nil))
-		(let ((proc (start-process "pbcopy" "*Messages*" "pbcopy")))
-			(process-send-string proc text)
-			(process-send-eof proc))))
+  (let ((process-connection-type nil))
+    (let ((proc (start-process "pbcopy" "*Messages*" "pbcopy")))
+      (process-send-string proc text)
+      (process-send-eof proc))))
 (setq interprogram-cut-function 'paste-to-osx)
 (setq interprogram-paste-function 'copy-from-osx)
-
-;; (global-set-key (kbd "C-]") 'forward-paragraph)
-;;(define-key global-map (kdb "M-n") 'forward-paragraph)
-;;(define-key global-map (kdb "M-p") 'backward-paragraph)
 
  
 ;; Color Theme
 (load-theme 'zenburn t)
-
 
 
 ;; Multiple Cursor
@@ -65,12 +54,12 @@
 (declare-function smartrep-define-key "smartrep")
 (global-unset-key (kbd "C-t"))
 (smartrep-define-key global-map (kbd "C-t")
-	'(("C-t" . 'mc/mark-next-like-lthis)
-		("C-n" . 'mc/mark-next-like-lthis)
-		("C-p" . 'mc/mark-previous-like-lthis)
-		("*" . 'mc/mark-all-like-lthis)
-		("d" . 'mc/mark-all-like-lthis-dwim)
-		("i" . 'mc/insert-numbers)))
+  '(("C-t" . 'mc/mark-next-like-lthis)
+    ("C-n" . 'mc/mark-next-like-lthis)
+    ("C-p" . 'mc/mark-previous-like-lthis)
+    ("*" . 'mc/mark-all-like-lthis)
+    ("d" . 'mc/mark-all-like-lthis-dwim)
+    ("i" . 'mc/insert-numbers)))
 
 
 ;; Kill Word at Point
@@ -96,6 +85,8 @@
 ;; Helm
 (require 'helm)
 (require 'helm-config)
+(helm-mode +1)
+(define-key global-map (kbd "C-q")     'helm-mini)
 (define-key global-map (kbd "M-x")     'helm-M-x)
 (define-key global-map (kbd "C-x C-f") 'helm-find-files)
 (define-key global-map (kbd "C-x C-r") 'helm-recentf)
@@ -106,9 +97,9 @@
 (define-key helm-map (kbd "C-h") 'backward-delete-char)
 (define-key helm-map (kbd "TAB") 'helm-execute-persistent-action)
 
-;; (define-key helm-find-files-map (kbd "C-h") 'delete-backward-char)
-;; (define-key helm-find-files-map (kbd "TAB") 'helm-execute-persistent-action)
-;; (define-key helm-read-file-map (kbd "TAB") 'helm-execute-persistent-action)
+(define-key helm-find-files-map (kbd "C-h") 'delete-backward-char)
+(define-key helm-find-files-map (kbd "TAB") 'helm-execute-persistent-action)
+(define-key helm-read-file-map (kbd "TAB") 'helm-execute-persistent-action)
 
 (define-key helm-command-map (kbd "d") 'helm-descbinds)
 (define-key helm-command-map (kbd "g") 'helm-ag)
@@ -119,9 +110,12 @@
 (setq helm-buffer-max-length 35)
 (setq helm-mini-defaul-sources
       '(helm-source-buffers-list
-	helm-source-ls-git
-	helm-source-recentf
-	helm-source-buffer-not-found))
+				helm-source-minibuffer-history
+				helm-source-files-in-current-dir
+				helm-source-ls-git
+				helm-source-recentf
+				helm-source-buffer-not-found))
+
 (defadvice helm-delete-minibuffer-contents (before helm-emulate-kill-line activate)
   "Emulate `kill-line' in helm minibuffer"
   (kill-new (buffer-substring (point) (field-end))))
@@ -130,6 +124,7 @@
   (when (file-exists-p candidate)
     ad-do-it))
 
+;; Helm Swoop
 (require 'helm-swoop)
 (global-set-key (kbd "M-i") 'helm-swoop)
 (global-set-key (kbd "M-I") 'helm-swoop-back-to-last-point)
@@ -137,36 +132,34 @@
 (global-set-key (kbd "C-x M-i") 'helm-multi-swoop-all)
 (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
 (define-key helm-swoop-map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
+(setq helm-swoop-move-to-line-cycle nil)
 
 
+;; Helm Git
 (require 'helm-git-grep)
 (global-set-key (kbd "C-c g") 'helm-git-grep)
 (define-key isearch-mode-map (kbd "C-c g") 'helm-git-grep-from-isearch)
 (eval-after-load 'helm
   '(define-key helm-map (kbd "C-c g") 'helm-git-grep-from-helm))
 
-(helm-mode 1)
-
 
 ;; Helm GitHub 
 (require 'helm-open-github)
+(require 'helm-github-stars)
+(require 'helm-ghq)
+(setq helm-github-stars-username "ryooopan")
 (global-set-key (kbd "C-c o f") 'helm-open-github-from-file)
 (global-set-key (kbd "C-c o c") 'helm-open-github-from-commit)
 (global-set-key (kbd "C-c o i") 'helm-open-github-from-issues)
-
-
- ;; GHQ
-(require 'helm-ghq)
 (global-set-key (kbd "C-c C-q") 'helm-ghq)
 
 
-(require 'helm-github-stars)
-(setq helm-github-stars-username "ryooopan")
-
-;; (require 'anything-startup)
-;;(require 'popwin)
-;;(popwin-mode 1)
-;;(setq display-buffer-function 'popwin:display-buffer)
+;; Popwin
+(require 'popwin)
+(popwin-mode 1)
+(setq display-buffer-function 'popwin:display-buffer)
+(push '("^\*helm .+\*$" :regexp t) popwin:special-display-config)
+(push '("^\*helm-.+\*$" :regexp t) popwin:special-display-config)
 
 
 ;; Git Gutter Fringe
@@ -178,10 +171,10 @@
 (set-face-foreground 'git-gutter:modified "yellow")
 
 
-
 ;; Jaunte Hit a Hint
 (require 'jaunte)
 (global-set-key (kbd "C-c C-j") 'jaunte)
+
 
 ;; Magit
 (require 'magit)
@@ -193,12 +186,8 @@
 	(exec-path-from-shell-copy-envs envs))
 
 
+;; Toggle Line Number
 (global-set-key (kbd "C-x C-l") 'linum-mode)
-
-;; Recent File
-(setq recentf-max-saved-items 3000)
-(setq recentf-exclude '("/TAGS$" "/var/tmp/"))
-(require 'recentf-ext)
 
 
 ;; Hlinum 
@@ -206,6 +195,7 @@
 (hlinum-activate)
 
 
+;; Ace Jump
 (require 'ace-jump-mode)
 (define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
 
@@ -222,7 +212,8 @@
 (require 'expand-region)
 (global-set-key (kbd "C-@") 'er/expand-region)
 (global-set-key (kbd "C-M-@") 'er/contract-region)
-;;(transient-mark-mode t)
+(transient-mark-mode t)
+
 
 ;; Point Undo
 (require 'point-undo)
@@ -230,29 +221,20 @@
 (define-key global-map (kbd "S-<f-7>") 'point-redo)
 
 
-
-;; Undo
+;; Undo and Redo
 (require 'undo-tree)
 (require 'undohist)
+(require 'redo+)
 (global-undo-tree-mode t)
 (global-set-key (kbd "M-/") 'undo-tree-redo)
-(undohist-initialize)
-
-
-;; Redo+
-(require 'redo+)
 (global-set-key (kbd "C-M-/") 'redo)
+(undohist-initialize)
 (setq undo-no-redo t) 
 
-
-;; Smart Parents
-;; (require 'smartparens-config)
-;; (smartparens-global-mode t)
 
 ;; Line Number
 (column-number-mode t)
 (line-number-mode t)
-
 
 
 ;; Smooth Scroll
@@ -292,11 +274,14 @@
 (define-key ac-complete-mode-map (kbd "C-p") 'ac-previous)
 (define-key ac-complete-mode-map (kbd "C-e") 'ac-complete)
 
+
 ;; Gist
 (require 'gist)
 
+
 ;; Shell Hisotyr
 (require 'shell-history)
+
 
 ;; Python Mode
 (add-hook 'python-mode-hook
@@ -314,11 +299,13 @@
 ;; JavaScript Mode
 (setq js-indent-level 2)
 
+
 ;; CoffeeScript Mode
 (add-hook 'coffee-mode-hook
 	  '(lambda() 
 	     (set (make-local-variable 'tab-width) 2)
 	     (setq coffee-tab-width 2)))
+
 
 ;; Haml Mode
 (require 'haml-mode)
@@ -337,6 +324,7 @@
           '(lambda()
              (setq css-indent-offset 2)
              (setq scss-compile-at-save nil)))
+
 
 ;; Yaml Mode
 (require 'yaml-mode)
