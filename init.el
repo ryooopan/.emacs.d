@@ -1,18 +1,9 @@
-;;(set-face-foreground 'font-lock-string-face "#75715E")
-(set-face-foreground 'font-lock-comment-face "black")
-
 ;; Load Files
-;; (add-to-list 'load-path "~/.emacs.d/lisp")
-(setq load-path (cons "~/.emacs.d/elisp" load-path))
+(add-to-list 'load-path "~/.emacs.d/lisp/")
 
 (package-initialize)
 (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
-
-
-;; (require 'anything-startup)
-;;(require 'popwin)
-;;(setq display-buffer-function 'popwin:display-buffer)
 
 
 ;; General Settings
@@ -20,6 +11,7 @@
 (setq indent-level 2)
 (setq tab-width 2)
 (show-paren-mode 1)
+(global-hl-line-mode 1)
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 
@@ -29,13 +21,35 @@
 ;;(define-key global-map (kdb "M-p") 'backward-paragraph)
 
  
-;;(when (eq system-type 'darwin)
-;;  (setq ns-command-modifier (quote meta)))
+;; Color Theme
+(load-theme 'zenburn t)
 
-;; Smooth Scroll
-(require 'smooth-scroll)
-(smooth-scroll-mode t)
 
+
+;; Helm
+(require 'anything-startup)
+(require 'popwin)
+(popwin-mode 1)
+;;(setq display-buffer-function 'popwin:display-buffer)
+
+;; (require 'helm-config)
+;; (global-set-key (kbd "M-x") 'helm-M-X)
+;; (helm-mode 1)
+
+
+;; Powerline
+(require 'powerline)
+(setq powerline-arrow-shape 'arrow)
+(custom-set-faces
+ '(mode-line ((t (:foreground "#030303" :background "#bdbdbd" :box nil))))
+ '(mode-line-inactive ((t (:foreground "#f9f9f9" :background "#666666" :box nil)))))
+
+;; Jaunte Hit a Hint
+(require 'jaunte)
+(global-set-key (kbd "C-c C-j") 'jaunte)
+
+;; Magit
+(require 'magit)
 
 
 (global-set-key (kbd "C-x C-l") 'linum-mode)
@@ -92,7 +106,12 @@
 (column-number-mode t)
 (line-number-mode t)
 
-;; (load-theme 'zenburn t)
+
+
+;; Smooth Scroll
+(require 'smooth-scroll)
+(smooth-scroll-mode t)
+
 
 ;; Encoding
 (set-language-environment "Japanese")
@@ -114,35 +133,34 @@
 (transient-mark-mode t)
 
 
-;; Yasnippet
-;; (require 'yasnippet-config)
-;; (yas-global-mode 1)
-
-
-
-
 ;; Multiple Cursor
 (require 'multiple-cursors)
-(require 'smartrep)
-(declare-function smartrep-define-key "smartrep")
 (global-set-key (kbd "C-M-c") 'mc/edit-lines)
 (global-set-key (kbd "C-M-r") 'mc/mark-all-in-region)
+
+;; Smartrep
+(require 'smartrep)
+(declare-function smartrep-define-key "smartrep")
 (global-unset-key "\C-t")
-(smartrep-define-key
- global-map "C-t"
- '(("C-t"      . 'mc/mark-next-like-this)
-   ("n"        . 'mc/mark-next-like-this)
-   ("p"        . 'mc/mark-previous-like-this)
-   ("m"        . 'mc/mark-more-like-this-extended)
-   ("u"        . 'mc/unmark-next-like-this)
-   ("U"        . 'mc/unmark-previous-like-this)
-   ("s"        . 'mc/skip-to-next-like-this)
-   ("S"        . 'mc/skip-to-previous-like-this)
-   ("*"        . 'mc/mark-all-like-this)
-   ("d"        . 'mc/mark-all-like-this-dwim)
-   ("i"        . 'mc/insert-numbers)
-   ("o"        . 'mc/sort-regions)
-   ("O"        . 'mc/reverse-regions)))
+
+;(smartrep-define-key global-map "C-q"
+;  '(("[" . 'backward-paragraph)
+;    ("]" . 'forward-paragraph)))
+  
+(smartrep-define-key global-map "C-t"
+  '(("C-t" . 'mc/mark-next-like-this)
+    ("n" . 'mc/mark-next-like-this)
+    ("p" . 'mc/mark-previous-like-this)
+    ("m" . 'mc/mark-more-like-this-extended)
+    ("u" . 'mc/unmark-next-like-this)
+    ("U" . 'mc/unmark-previous-like-this)
+    ("s" . 'mc/skip-to-next-like-this)
+    ("S" . 'mc/skip-to-previous-like-this)
+    ("*" . 'mc/mark-all-like-this)
+    ("d" . 'mc/mark-all-like-this-dwim)
+    ("i" . 'mc/insert-numbers)
+    ("O" . 'Mc/sort-regions)
+    ("O" . 'mc/reverse-regions)))
 
 
 ;; Anzu Search Count
@@ -153,7 +171,9 @@
 (require 'auto-complete)
 (require 'auto-complete-config)
 (global-auto-complete-mode t)
-
+(define-key ac-complete-mode-map (kbd "C-n") 'ac-next)
+(define-key ac-complete-mode-map (kbd "C-p") 'ac-previous)
+(define-key ac-complete-mode-map (kbd "C-e") 'ac-complete)
 
 ;; Gist
 (require 'gist)

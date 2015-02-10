@@ -1,2 +1,3 @@
 
-((digest . "c2a4bb64e771b4b29be06f4f5ce7cdb6") (undo-list nil undo-tree-canary))
+((digest . "34be7d93f302e39f0d7b7c2f684788ac") (undo-list nil (15 . 18) (t 21721 33420 0 0) nil ("
+" . 938) nil undo-tree-canary))

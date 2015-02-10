@@ -1,28 +1,40 @@
-((("undo-tree-redo" .
-   [0 0 0 0 2 0 0 0 0 0 0 0 0 0])
-  ("forward-paragraph" .
-   [0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0])
-  ("Smooth" .
-   [0 0 0 0 1 1])
-  ("undohist" .
-   [0 0 0 0 0 0 1 0])
-  ("auto-complete" .
-   [1 0 0 0 0 0 0 0 0 0 0 0 0])
-  ("require" .
-   [4 0 1 4 0 0 0])
-  ("global-unset-key" .
-   [0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0])
-  ("global-set-key" .
-   [0 0 0 0 0 0 0 0 0 2 0 0 0 1])
-  ("kbd" .
-   [2 0 0])
-  ("undo-tree" .
-   [0 0 0 0 1 0 0 0 0])
+((("popwin" .
+   [1 0 0 0 0 0])
+  ("backward-paragraph" .
+   [0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0])
+  ("global-map" .
+   [0 0 0 0 0 0 0 0 0 1])
+  ("smartrep-define-key" .
+   [0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0])
+  ("define-key" .
+   [0 0 0 1 0 1 0 0 0 0])
+  ("defun" .
+   [0 0 1 2 0])
+  ("ac-complete-mode-map" .
+   [0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0])
+  ("Magit" .
+   [0 0 0 0 1])
+  ("helm-config" .
+   [0 0 0 0 1 0 0 0 0 0 0])
+  ("kdb" .
+   [0 0 1])
   ("zenburn" .
    [1 0 0 0 0 0 0])
-  ("show-paren-mode" .
-   [0 0 0 0 0 0 0 1 0 0 0 0 0 1 0])
-  ("define-key" .
-   [0 0 0 0 0 0 1 0 0 0])
-  ("global-map" .
-   [1 0 0 0 0 0 0 0 0 0])))
+  ("undo-tree" .
+   [0 0 0 0 1 0 0 0 0])
+  ("kbd" .
+   [5 0 0])
+  ("global-set-key" .
+   [0 0 0 0 0 0 0 0 0 1 1 0 0 1])
+  ("global-unset-key" .
+   [0 0 0 0 0 1 2 0 0 0 0 0 0 0 0 1])
+  ("require" .
+   [2 0 2 2 1 1 1])
+  ("auto-complete" .
+   [1 0 0 0 0 0 0 0 0 0 0 0 0])
+  ("undohist" .
+   [0 0 0 0 0 0 1 0])
+  ("forward-paragraph" .
+   [0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0])
+  ("nil" .
+   [1 0 0])))
