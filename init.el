@@ -10,22 +10,41 @@
 (setq inhibit-startup-message t)
 (setq indent-level 2)
 (setq tab-width 2)
-(show-paren-mode 1)
+(setq make-backup-files nil)
+(setq auto-save-default nil)
+(setq backup-inhibited t)
 (global-hl-line-mode 1)
+(show-paren-mode t)
+(transient-mark-mode t)
+(set-default-font "Ubuntu Mono-20")
 (defalias 'yes-or-no-p 'y-or-n-p)
-
+(windmove-default-keybindings)
 
 (global-set-key (kbd "C-h") 'backward-delete-char)
+(global-set-key (kbd "M-[") 'backward-paragraph)
+(global-set-key (kbd "M-]") 'forward-paragraph)
 (global-set-key (kbd "S-M-h") (lambda () (interactive) (move-to-window-line 0)))
 (global-set-key (kbd "S-M-m") (lambda () (interactive) (move-to-window-line nil)))
 (global-set-key (kbd "S-M-l") (lambda () (interactive) (move-to-window-line -1)))
-(global-set-key (kbd "M-[") 'backward-paragraph)
-(global-set-key (kbd "M-]") 'forward-paragraph)
+(global-set-key (kbd "M-n") (lambda () (interactive) (scroll-up 1)))
+(global-set-key (kbd "M-p") (lambda () (interactive) (scroll-down 1)))
 (define-key isearch-mode-map (kbd "C-h") 'isearch-delete-char)
 
 
-(when (eq system-type 'darwin)
-  (setq ns-command-modifier (quote meta)))
+(setq scroll-conservatively 35
+			scroll-margin 0
+			scroll-step 4)
+
+
+;; New Window with C-t
+(defun other-window-or-split ()
+  (interactive)
+  (when (one-window-p)
+    (split-window-horizontally)) 
+  (other-window 1))
+(global-set-key (kbd "C-t") 'other-window-or-split)
+(global-set-key (kbd "C-M-t") (lambda () (interactive) (other-window 1)))
+(global-set-key (kbd "C-M-z") (lambda () (interactive) (other-window -1)))
 
 
 ;; Copy and Paste with OS X
@@ -44,23 +63,39 @@
 (load-theme 'zenburn t)
 
 
-;; Multiple Cursor
+;; Buffer History
+(require 'historyf)
+(global-set-key (kbd "C-x h") 'historyf-back)
+(global-set-key (kbd "C-x l") 'historyf-forward)
+
+
+;; Multiple Cursors
 (require 'multiple-cursors)
 (global-set-key (kbd "C-M-c") 'mc/edit-lines)
 (global-set-key (kbd "C-M-r") 'mc/mark-all-in-region)
 
+
 ;; Smartrep
 (require 'smartrep)
 (declare-function smartrep-define-key "smartrep")
-(global-unset-key (kbd "C-t"))
-(smartrep-define-key global-map (kbd "C-t")
-  '(("C-t" . 'mc/mark-next-like-lthis)
-    ("C-n" . 'mc/mark-next-like-lthis)
-    ("C-p" . 'mc/mark-previous-like-lthis)
-    ("*" . 'mc/mark-all-like-lthis)
-    ("d" . 'mc/mark-all-like-lthis-dwim)
-    ("i" . 'mc/insert-numbers)))
+;; (global-unset-key (kbd "C-."))
+;; (smartrep-define-key global-map (kbd "C-.")
+;;  '(("C-." . 'mc/mark-next-like-this)
+;;    ("C-n" . 'mc/mark-next-like-this)
+;;    ("C-p" . 'mc/mark-previous-like-this)
+;;    ("*" . 'mc/mark-all-like-this)
+;;    ("d" . 'mc/mark-all-like-this-dwim)
+;;    ("i" . 'mc/insert-numbers)))
 
+(smartrep-define-key global-map (kbd "C-x")
+  '(("C-}" . 'enlarge-window-horizontally)
+    ("C-{" . 'shrink-window-horizontally)
+		("C-^" . 'enlarge-window)))
+
+
+;; Golden Ratio
+(require 'golden-ratio)
+(golden-ratio-mode 1)
 
 ;; Kill Word at Point
 (defun kill-word-at-point ()
@@ -80,6 +115,20 @@
 		(fixup-whitespace)
 		(backward-char)))
 
+
+;; helm recentf only directories
+(defvar helm-c-recentf-directory-source
+  '((name . "Recentf Directry")
+    (candidates . (lambda ()
+                    (loop for file in recentf-list
+                          when (file-directory-p file)
+                          collect file)))
+    (type . file)))
+(defun my/helm-recentf (arg)
+  (interactive "P")
+  (if current-prefix-arg
+      (helm-other-buffer helm-c-recentf-directory-source "*helm recentf*")
+    (call-interactively 'helm-recentf)))
 
 
 ;; Helm
@@ -132,7 +181,6 @@
 (global-set-key (kbd "C-x M-i") 'helm-multi-swoop-all)
 (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
 (define-key helm-swoop-map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
-(setq helm-swoop-move-to-line-cycle nil)
 
 
 ;; Helm Git
@@ -163,17 +211,24 @@
 
 
 ;; Git Gutter Fringe
-(global-git-gutter-mode +1)
-(custom-set-variables
- '(git-gutter:modified-sign "+") 
- '(git-gutter:added-sign "+")
- '(git-gutter:deleted-sign "-"))
-(set-face-foreground 'git-gutter:modified "yellow")
+;; (require 'git-gutter-fringe+)
+(global-git-gutter+-mode +1)
+(setq git-gutter+-modified-sign "+") 
+(setq git-gutter+-added-sign "+")    
+(setq git-gutter+-deleted-sign "-")
+(set-face-foreground 'git-gutter+-modified "yellow") 
+(set-face-foreground 'git-gutter+-added "green")
+(set-face-foreground 'git-gutter+-deleted "red")
+;;(set-face-background 'git-gutter+-modified "yellow")
+;;(set-face-background 'git-gutter+-added "green")
+;;(set-face-background 'git-gutter+-deleted "red")
+
+;; Node
 
 
 ;; Jaunte Hit a Hint
-(require 'jaunte)
-(global-set-key (kbd "C-c C-j") 'jaunte)
+;; (require 'jaunte)
+;; (global-set-key (kbd "C-c j") 'jaunte)
 
 
 ;; Magit
@@ -190,14 +245,14 @@
 (global-set-key (kbd "C-x C-l") 'linum-mode)
 
 
-;; Hlinum 
+;; hlinum 
 (require 'hlinum)
 (hlinum-activate)
 
 
 ;; Ace Jump
 (require 'ace-jump-mode)
-(define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
+(define-key global-map (kbd "C-x j") 'ace-jump-mode)
 
 
 ;; Migemo
@@ -209,11 +264,14 @@
 
 
 ;; Expand Region
-(require 'expand-region)
-(global-set-key (kbd "C-@") 'er/expand-region)
-(global-set-key (kbd "C-M-@") 'er/contract-region)
-(transient-mark-mode t)
+;; (require 'expand-region)
+;; (global-set-key (kbd "C-@") 'er/expand-region)
+;; (global-set-key (kbd "C-M-@") 'er/contract-region)
 
+
+;; Powerline
+(require 'powerline)
+(powerline-default-theme)
 
 ;; Point Undo
 (require 'point-undo)
@@ -237,11 +295,6 @@
 (line-number-mode t)
 
 
-;; Smooth Scroll
-(require 'smooth-scroll)
-(smooth-scroll-mode t)
-
-
 ;; Encoding
 (set-language-environment "Japanese")
 (set-default-coding-systems 'utf-8)
@@ -250,16 +303,6 @@
 (set-buffer-file-coding-system 'utf-8)
 (prefer-coding-system 'utf-8)
 
-
-;; Backup Files
-(setq make-backup-files nil)
-(setq auto-save-default nil)
-(setq backup-inhibited t)
-
-
-;; Highlight
-(show-paren-mode t)
-(transient-mark-mode t)
 
 
 ;; Anzu Search Count
@@ -270,10 +313,19 @@
 (require 'auto-complete)
 (require 'auto-complete-config)
 (global-auto-complete-mode t)
+(ac-config-default)
+(global-auto-complete-mode t)
+(ac-set-trigger-key "TAB")
+(ac-set-trigger-key "<tab>")
+(add-to-list 'ac-dictionary-directories "~/.emacs.d/ac-dict")
 (define-key ac-complete-mode-map (kbd "C-n") 'ac-next)
 (define-key ac-complete-mode-map (kbd "C-p") 'ac-previous)
 (define-key ac-complete-mode-map (kbd "C-e") 'ac-complete)
 
+;; Yasnippet
+;; (require 'yasnippet)
+;; (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
+;; (yas-global-mode t)
 
 ;; Gist
 (require 'gist)
