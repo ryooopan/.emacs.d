@@ -23,6 +23,7 @@
 (global-set-key (kbd "C-h") 'backward-delete-char)
 (global-set-key (kbd "M-[") 'backward-paragraph)
 (global-set-key (kbd "M-]") 'forward-paragraph)
+(global-set-key (kbd "C-M-h") 'backward-kill-word)
 (global-set-key (kbd "S-M-h") (lambda () (interactive) (move-to-window-line 0)))
 (global-set-key (kbd "S-M-m") (lambda () (interactive) (move-to-window-line nil)))
 (global-set-key (kbd "S-M-l") (lambda () (interactive) (move-to-window-line -1)))
@@ -32,8 +33,43 @@
 
 
 (setq scroll-conservatively 35
-			scroll-margin 0
-			scroll-step 4)
+      scroll-margin 0
+      scroll-step 4)
+
+
+(defvar vimlike-f-recent-char nil)
+(defvar vimlike-f-recent-func nil)
+
+(defun vimlike-f (char)
+  "search to forward char into current line and move point (vim 'f' command)"
+  (interactive "cSearch to forward char: ")
+  (when (= (char-after (point)) char)
+    (forward-char))
+  (search-forward (char-to-string char) (point-at-eol) nil 1)
+  ;; (migemo-forward (char-to-string char) (point-at-eol) t 1)
+  (backward-char)
+  (setq vimlike-f-recent-search-char char
+	vimlike-f-recent-search-func 'vimlike-f))
+
+(defun vimlike-F (char)
+  "search to forward char into current line and move point. (vim 'F' command)"
+  (interactive "cSearch to backward char: ")
+  (search-backward (char-to-string char) (point-at-bol) nil 1)
+  ;; (migemo-backward (char-to-string char) (point-at-bol) t 1)
+  (setq vimlike-f-recent-search-char char
+	vimlike-f-recent-search-func 'vimlike-F))
+
+(defun vimlike-semicolon ()
+  "search repeat recent vimlike 'f' or 'F' search char (vim ';' command)"
+  (interactive)
+  (if (and vimlike-f-recent-search-char
+	   vimlike-f-recent-search-func)
+      (funcall vimlike-f-recent-search-func vimlike-f-recent-search-char)
+    (message "Empty recent search char.")))
+
+(global-set-key (kbd "M-j") 'vimlike-f)
+(global-set-key (kbd "M-k") 'vimlike-F)
+(global-set-key (kbd "M-u") 'vimlike-semicolon)
 
 
 ;; New Window with C-t
@@ -42,9 +78,9 @@
   (when (one-window-p)
     (split-window-horizontally)) 
   (other-window 1))
-(global-set-key (kbd "C-t") 'other-window-or-split)
-(global-set-key (kbd "C-M-t") (lambda () (interactive) (other-window 1)))
-(global-set-key (kbd "C-M-z") (lambda () (interactive) (other-window -1)))
+(global-set-key (kbd "C-x C-t") 'other-window-or-split)
+(global-set-key (kbd "C-t") (lambda () (interactive) (other-window 1)))
+(global-set-key (kbd "S-C-t") (lambda () (interactive) (other-window -1)))
 
 
 ;; Copy and Paste with OS X
@@ -63,29 +99,23 @@
 (load-theme 'zenburn t)
 
 
-;; Buffer History
-(require 'historyf)
-(global-set-key (kbd "C-x h") 'historyf-back)
-(global-set-key (kbd "C-x l") 'historyf-forward)
-
-
 ;; Multiple Cursors
-(require 'multiple-cursors)
-(global-set-key (kbd "C-M-c") 'mc/edit-lines)
-(global-set-key (kbd "C-M-r") 'mc/mark-all-in-region)
+;; (require 'multiple-cursors)
+;; (global-set-key (kbd "C-M-c") 'mc/edit-lines)
+;; (global-set-key (kbd "C-M-r") 'mc/mark-all-in-region)
 
 
 ;; Smartrep
 (require 'smartrep)
 (declare-function smartrep-define-key "smartrep")
-;; (global-unset-key (kbd "C-."))
-;; (smartrep-define-key global-map (kbd "C-.")
-;;  '(("C-." . 'mc/mark-next-like-this)
-;;    ("C-n" . 'mc/mark-next-like-this)
-;;    ("C-p" . 'mc/mark-previous-like-this)
-;;    ("*" . 'mc/mark-all-like-this)
-;;    ("d" . 'mc/mark-all-like-this-dwim)
-;;    ("i" . 'mc/insert-numbers)))
+(global-unset-key (kbd "C-t"))
+(smartrep-define-key global-map (kbd "C-t")
+  '(("C-t" . 'mc/mark-next-like-this)
+    ("C-n" . 'mc/mark-next-like-this)
+    ("C-p" . 'mc/mark-previous-like-this)
+    ("*" . 'mc/mark-all-like-this)
+    ("d" . 'mc/mark-all-like-this-dwim)
+    ("i" . 'mc/insert-numbers)))
 
 (smartrep-define-key global-map (kbd "C-x")
   '(("C-}" . 'enlarge-window-horizontally)
@@ -109,150 +139,121 @@
 
 
 ;; Kill line and Decrease Indent
-(defadvice kill-line (before kill-line-and-fixup activate)
-	(when (and (not (bolp)) (eolp))
-		(forward-char)
-		(fixup-whitespace)
-		(backward-char)))
-
+;; (defadvice kill-line (before kill-line-and-fixup activate)
+;; 	(when (and (not (bolp)) (eolp))
+;; 		(forward-char)
+;; 		(fixup-whitespace)
+;; 		(backward-char)))
+;; 
 
 ;; helm recentf only directories
-(defvar helm-c-recentf-directory-source
-  '((name . "Recentf Directry")
-    (candidates . (lambda ()
-                    (loop for file in recentf-list
-                          when (file-directory-p file)
-                          collect file)))
-    (type . file)))
-(defun my/helm-recentf (arg)
-  (interactive "P")
-  (if current-prefix-arg
-      (helm-other-buffer helm-c-recentf-directory-source "*helm recentf*")
-    (call-interactively 'helm-recentf)))
+;; (defvar helm-c-recentf-directory-source
+;;   '((name . "Recentf Directry")
+;;     (candidates . (lambda ()
+;;                     (loop for file in recentf-list
+;;                           when (file-directory-p file)
+;;                           collect file)))
+;;     (type . file)))
+;; (defun my/helm-recentf (arg)
+;;   (interactive "P")
+;;   (if current-prefix-arg
+;;       (helm-other-buffer helm-c-recentf-directory-source "*helm recentf*")
+;;     (call-interactively 'helm-recentf)))
+;; 
 
 
 ;; Helm
-(require 'helm)
-(require 'helm-config)
-(helm-mode +1)
-(define-key global-map (kbd "C-q")     'helm-mini)
-(define-key global-map (kbd "M-x")     'helm-M-x)
-(define-key global-map (kbd "C-x C-f") 'helm-find-files)
-(define-key global-map (kbd "C-x C-r") 'helm-recentf)
-(define-key global-map (kbd "M-y")     'helm-show-kill-ring)
-(define-key global-map (kbd "C-c i")   'helm-imenu)
-(define-key global-map (kbd "C-x b")   'helm-buffers-list)
+;; (require 'helm)
+;; (require 'helm-ls-git)
+;; (require 'helm-config)
+;; (helm-mode +1)
+;; (define-key global-map (kbd "C-q")     'helm-mini)
+;; (define-key global-map (kbd "M-x")     'helm-M-x)
+;; (define-key global-map (kbd "C-x C-f") 'helm-find-files)
+;; (define-key global-map (kbd "C-x C-r") 'helm-recentf)
+;; (define-key global-map (kbd "M-y")     'helm-show-kill-ring)
+;; (define-key global-map (kbd "C-c i")   'helm-imenu)
+;; (define-key global-map (kbd "C-x b")   'helm-buffers-list)
+ 
+;; (define-key helm-map (kbd "C-h") 'backward-delete-char)
+;; (define-key helm-map (kbd "TAB") 'helm-execute-persistent-action)
 
-(define-key helm-map (kbd "C-h") 'backward-delete-char)
-(define-key helm-map (kbd "TAB") 'helm-execute-persistent-action)
+;; (define-key helm-find-files-map (kbd "C-h") 'delete-backward-char)
+;; (define-key helm-find-files-map (kbd "TAB") 'helm-execute-persistent-action)
+;; (define-key helm-read-file-map (kbd "TAB") 'helm-execute-persistent-action)
 
-(define-key helm-find-files-map (kbd "C-h") 'delete-backward-char)
-(define-key helm-find-files-map (kbd "TAB") 'helm-execute-persistent-action)
-(define-key helm-read-file-map (kbd "TAB") 'helm-execute-persistent-action)
+;; (define-key helm-command-map (kbd "d") 'helm-descbinds)
+;; (define-key helm-command-map (kbd "g") 'helm-ag)
+;; (define-key helm-command-map (kbd "o") 'helm-occur)
+;; (define-key helm-command-map (kbd "y") 'yas/insert-snippet)
 
-(define-key helm-command-map (kbd "d") 'helm-descbinds)
-(define-key helm-command-map (kbd "g") 'helm-ag)
-(define-key helm-command-map (kbd "o") 'helm-occur)
-(define-key helm-command-map (kbd "y") 'yas/insert-snippet)
+;; (setq helm-delete-minibuffer-contents-from-point t)
+;; (setq helm-buffer-max-length 35)
+;; (setq helm-mini-default-sources
+;;       '(helm-source-buffers-list
+;;         helm-source-ls-git
+;;         helm-source-recentf
+;;         helm-source-files-in-current-dir
+;;         helm-source-minibuffer-history
+;;         helm-source-buffer-not-found))
 
-(setq helm-delete-minibuffer-contents-from-point t)
-(setq helm-buffer-max-length 35)
-(setq helm-mini-defaul-sources
-      '(helm-source-buffers-list
-				helm-source-minibuffer-history
-				helm-source-files-in-current-dir
-				helm-source-ls-git
-				helm-source-recentf
-				helm-source-buffer-not-found))
-
-(defadvice helm-delete-minibuffer-contents (before helm-emulate-kill-line activate)
-  "Emulate `kill-line' in helm minibuffer"
-  (kill-new (buffer-substring (point) (field-end))))
-(defadvice helm-ff-kill-or-find-buffer-fname (around execute-only-if-exist activate)
-  "Execute command only if CANDIDATE exists"
-  (when (file-exists-p candidate)
-    ad-do-it))
+;; (defadvice helm-delete-minibuffer-contents (before helm-emulate-kill-line activate)
+;;   "Emulate `kill-line' in helm minibuffer"
+;;   (kill-new (buffer-substring (point) (field-end))))
+;; (defadvice helm-ff-kill-or-find-buffer-fname (around execute-only-if-exist activate)
+;;   "Execute command only if CANDIDATE exists"
+;;   (when (file-exists-p candidate)
+;;     ad-do-it))
 
 ;; Helm Swoop
-(require 'helm-swoop)
-(global-set-key (kbd "M-i") 'helm-swoop)
-(global-set-key (kbd "M-I") 'helm-swoop-back-to-last-point)
-(global-set-key (kbd "C-c M-i") 'helm-multi-swoop)
-(global-set-key (kbd "C-x M-i") 'helm-multi-swoop-all)
-(define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
-(define-key helm-swoop-map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
-
+;; (require 'helm-swoop)
+;; (global-set-key (kbd "C-s") 'helm-swoop)
+;; (global-set-key (kbd "M-i") 'helm-swoop)
+;; (global-set-key (kbd "M-I") 'helm-swoop-back-to-last-point)
+;; (global-set-key (kbd "C-c M-i") 'helm-multi-swoop)
+;; (global-set-key (kbd "C-x M-i") 'helm-multi-swoop-all)
+;; (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
+;; (define-key helm-swoop-map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
 
 ;; Helm Git
-(require 'helm-git-grep)
-(global-set-key (kbd "C-c g") 'helm-git-grep)
-(define-key isearch-mode-map (kbd "C-c g") 'helm-git-grep-from-isearch)
-(eval-after-load 'helm
-  '(define-key helm-map (kbd "C-c g") 'helm-git-grep-from-helm))
-
-
-;; Helm GitHub 
-(require 'helm-open-github)
-(require 'helm-github-stars)
-(require 'helm-ghq)
-(setq helm-github-stars-username "ryooopan")
-(global-set-key (kbd "C-c o f") 'helm-open-github-from-file)
-(global-set-key (kbd "C-c o c") 'helm-open-github-from-commit)
-(global-set-key (kbd "C-c o i") 'helm-open-github-from-issues)
-(global-set-key (kbd "C-c C-q") 'helm-ghq)
-
+;; (require 'helm-git-grep)
+;; (global-set-key (kbd "C-c g") 'helm-git-grep)
+;; (define-key isearch-mode-map (kbd "C-c g") 'helm-git-grep-from-isearch)
+;; (eval-after-load 'helm
+;;   '(define-key helm-map (kbd "C-c g") 'helm-git-grep-from-helm))
+;; 
 
 ;; Popwin
-(require 'popwin)
-(popwin-mode 1)
-(setq display-buffer-function 'popwin:display-buffer)
-(push '("^\*helm .+\*$" :regexp t) popwin:special-display-config)
-(push '("^\*helm-.+\*$" :regexp t) popwin:special-display-config)
+;; (require 'popwin)
+;; (popwin-mode 1)
+;; (setq display-buffer-function 'popwin:display-buffer)
+;; (push '("^\*helm .+\*$" :regexp t) popwin:special-display-config)
+;; (push '("^\*helm-.+\*$" :regexp t) popwin:special-display-config)
 
 
 ;; Git Gutter Fringe
 ;; (require 'git-gutter-fringe+)
-(global-git-gutter+-mode +1)
-(setq git-gutter+-modified-sign "+") 
-(setq git-gutter+-added-sign "+")    
-(setq git-gutter+-deleted-sign "-")
-(set-face-foreground 'git-gutter+-modified "yellow") 
-(set-face-foreground 'git-gutter+-added "green")
-(set-face-foreground 'git-gutter+-deleted "red")
-;;(set-face-background 'git-gutter+-modified "yellow")
-;;(set-face-background 'git-gutter+-added "green")
-;;(set-face-background 'git-gutter+-deleted "red")
-
-;; Node
-
-
-;; Jaunte Hit a Hint
-;; (require 'jaunte)
-;; (global-set-key (kbd "C-c j") 'jaunte)
+;; (global-git-gutter+-mode +1)
+;; (setq git-gutter+-modified-sign "+") 
+;; (setq git-gutter+-added-sign "+")    
+;; (setq git-gutter+-deleted-sign "-")
+;; (set-face-foreground 'git-gutter+-modified "yellow") 
+;; (set-face-foreground 'git-gutter+-added "green")
+;; (set-face-foreground 'git-gutter+-deleted "red")
 
 
 ;; Magit
-(require 'magit)
-
-
-;; Exec Path from Shell
-(require 'exec-path-from-shell)
-(let ((envs '("PATH" "DOCKER_CERT_PATH")))
-	(exec-path-from-shell-copy-envs envs))
+;; (require 'magit)
 
 
 ;; Toggle Line Number
 (global-set-key (kbd "C-x C-l") 'linum-mode)
 
 
-;; hlinum 
-(require 'hlinum)
-(hlinum-activate)
-
 
 ;; Ace Jump
-(require 'ace-jump-mode)
-(define-key global-map (kbd "C-x j") 'ace-jump-mode)
+;; (require 'ace-jump-mode)
+;; (define-key global-map (kbd "C-x j") 'ace-jump-mode)
 
 
 ;; Migemo
@@ -268,26 +269,6 @@
 ;; (global-set-key (kbd "C-@") 'er/expand-region)
 ;; (global-set-key (kbd "C-M-@") 'er/contract-region)
 
-
-;; Powerline
-(require 'powerline)
-(powerline-default-theme)
-
-;; Point Undo
-(require 'point-undo)
-(define-key global-map (kbd "<f-7>") 'point-undo)
-(define-key global-map (kbd "S-<f-7>") 'point-redo)
-
-
-;; Undo and Redo
-(require 'undo-tree)
-(require 'undohist)
-(require 'redo+)
-(global-undo-tree-mode t)
-(global-set-key (kbd "M-/") 'undo-tree-redo)
-(global-set-key (kbd "C-M-/") 'redo)
-(undohist-initialize)
-(setq undo-no-redo t) 
 
 
 ;; Line Number
@@ -310,29 +291,30 @@
 
 
 ;; Auto Complete
-(require 'auto-complete)
-(require 'auto-complete-config)
-(global-auto-complete-mode t)
-(ac-config-default)
-(global-auto-complete-mode t)
-(ac-set-trigger-key "TAB")
-(ac-set-trigger-key "<tab>")
-(add-to-list 'ac-dictionary-directories "~/.emacs.d/ac-dict")
-(define-key ac-complete-mode-map (kbd "C-n") 'ac-next)
-(define-key ac-complete-mode-map (kbd "C-p") 'ac-previous)
-(define-key ac-complete-mode-map (kbd "C-e") 'ac-complete)
+;; (require 'auto-complete)
+;; (require 'auto-complete-config)
+;; (global-auto-complete-mode t)
+;; (ac-config-default)
+;; (global-auto-complete-mode t)
+;; (ac-set-trigger-key "TAB")
+;; (ac-set-trigger-key "<tab>")
+;; (add-to-list 'ac-dictionary-directories "~/.emacs.d/ac-dict")
+;; (define-key ac-complete-mode-map (kbd "C-n") 'ac-next)
+;; (define-key ac-complete-mode-map (kbd "C-p") 'ac-previous)
+;; (define-key ac-complete-mode-map (kbd "C-e") 'ac-complete)
 
-;; Yasnippet
+
+;;  Yasnippet
 ;; (require 'yasnippet)
 ;; (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
 ;; (yas-global-mode t)
 
 ;; Gist
-(require 'gist)
+;; (require 'gist)
 
 
 ;; Shell Hisotyr
-(require 'shell-history)
+;; (require 'shell-history)
 
 
 ;; Python Mode
@@ -359,6 +341,16 @@
 	     (setq coffee-tab-width 2)))
 
 
+;; Emmet Mode
+(require 'emmet-mode)
+(add-hook 'sgml-mode-hook 'emmet-mode) 
+(add-hook 'css-mode-hook  'emmet-mode) 
+(add-hook 'emmet-mode-hook (lambda () (setq emmet-indentation 2))) 
+(eval-after-load "emmet-mode"
+  '(define-key emmet-mode-keymap (kbd "C-j") nil))
+(define-key global-map (kbd "M-i") 'emmet-expand-line)
+
+
 ;; Haml Mode
 (require 'haml-mode)
 (add-to-list 'auto-mode-alist '("\\.haml$" . haml-mode))
@@ -377,6 +369,9 @@
              (setq css-indent-offset 2)
              (setq scss-compile-at-save nil)))
 
+;; Less Mode
+(require 'less-css-mode)
+(add-to-list 'auto-mode-alist '("\\.less$" . less-css-mode))
 
 ;; Yaml Mode
 (require 'yaml-mode)
